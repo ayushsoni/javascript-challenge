@@ -2,175 +2,122 @@
     Signup Form Script
     This script will load the state select list and validate the form before submission
 */
-
 //adds an event listener for the DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
-	
+document.addEventListener('DOMContentLoaded', onReady);
+
+function onReady() {
+
     //global variables for my code
-    var form = document.getElementById('signup');
-    var states = form.elements['state'];
+    var signupForm = document.getElementById('signup');
+    var occupationOther = signupForm.elements['occupationOther'];
+    var occupationSelect = signupForm.elements['occupation'];
+    var requiredFields = ['firstName', 'lastName', 'address1', 'city', 'state', 'zip', 'birthdate'];
+
+    var stateSelect = signupForm.elements['state'];
+
+    var cancelButton = document.getElementById('cancelButton');
+    var idx;
     var option;
-	var idx;
-	var state;
 
-    //creates
-    for (idx = 0; idx < usStates.length;++idx) { 
-        state = usStates[idx];
-        //new option element for each state in the array
+    //creates my new option element for each state in the array
+    for (idx = 0; idx < usStates.length; ++idx) {
         option = document.createElement('option');
-        //properties for new option element
-        option.innerHTML = state.name;
-        option.value = state.code;
-        states.appendChild(option);
+        option.innerHTML = usStates[idx].name;
+        option.value = usStates[idx].code;
+        stateSelect.appendChild(option);
     }
+
     //retrieves the value of the occupation select
-    var optionButton = document.getElementById('occupation').value = "other";
-    var occupationSelect = document.getElementById('occupation');
-    //occupation select list raising an event named change and
-    //adds event listener
-    occupationSelect.addEventListener('change', function() {
-    	if("other" == occupationSelect.value) {
-    		form.elements['occupationOther'].style.display = "block";
-    	}
-    	else {
-    		form.elements['occupationOther'].style.display = "none";
-    	}
-    });
-
-    //user confirms the action of redirecting to google
-    var nothx = document.getElementById('cancelButton');
-    nothx.addEventListener('click', function() {
-
-        //used to let the user confirm something
-        if(window.confirm('Are you sure you want to leave this page?')) {
-            window.location = 'http://www.google.com/';
+    occupationSelect.addEventListener('change', function () {
+        if (occupationSelect.value == 'other') {
+            occupationOther.style.display = "inline";
+        }
+        else {
+            occupationOther.style.display = "none";
         }
     });
-    //adds event listener for the submit element
-    form.addEventListener('submit', onSubmit);
-});
+    //event listener for leaving the page window
+    cancelButton.addEventListener('click', function () {
+        if (window.confirm("Are you sure you want to leave?")) {
+            window.location.href = "http://google.com";
+        }
+    });
 
-function onSubmit(eventObj) {
-    //global variables assigned to invalid fields in my form
-    var form = document.getElementById('signup');
-    var firstName = document.getElementById('firstName').value;
-    var lastName = form.elements['lastName'].value;
-    var address = document.getElementById('address1').value;
-    var city = document.getElementById('city').value;
-    var state = form.elements['state'].value;
-    var zip = form.elements['zip'].value;
-    var birthday = document.getElementById('birthdate').value;
-    var occupationSelect = document.getElementById('occupation');
-    var date = new Date(birthday);
-    var today = new Date();
-    var occupationOther = form.elements['occupationOther'];
-    var zipRegExp = new RegExp('^\\d{5}$');
-    var valid = true;
-    //catches the exception that prevents the browser 
-    //from not running my script in the developer tools console
-    try {
-        valid = validateForm(this);
-    }
-    catch(exception) {
-        valid = false; //stop form submission to see error
-    }
-    if (!valid && eventObj.preventDefault) {
-            eventObj.preventDefault(); 
-    }
-    //prohibit the form from being submitted by calling the event object's
-    //preventDefault() method
-    //use new standard preventDefault() if available
-    event.returnValue = valid; //for older browsers
-    return valid;
+    //catches the exception that prevents the browser from not running my script in the developer
+    //tools console
+    signupForm.addEventListener('submit', onSubmit);
 
-    function validateForm() {
-        var validation = true;
-        //manipulates my validation boolean so that it is false as the user is
-        //inputting all this information
-        if (firstName == "") {
-            document.getElementById('firstName').className = 'form-control invalid-field';
-            validation = false;
+    function onSubmit(eventObject) {
+        try {
+            eventObject.returnValue = validateForm(this);
         }
-        else {
-            document.getElementById('firstName').className = 'form-control';
+        catch(error) {
+            console.log(error);//stop form submission to see error
         }
-        if (lastName == "") {
-            form.elements['lastName'].className = 'form-control invalid-field';
-            validation = false;
+        if (!eventObject.returnValue && eventObject.preventDefault) {
+            eventObject.preventDefault();
         }
-        else {
-            form.elements['lastName'].className = 'form-control';
+        //prohibit the form from being submitted by calling the event objecct
+        return eventObject.returnValue;
+    }
+
+    //manipulates my validation boolean so that it is false
+    //as the user is inputting all this information
+    function validateForm(form) {
+        var idx;
+        var formValid = true;
+
+        if (occupationSelect.value == 'other') {
+            requiredFields.push('occupationOther');
         }
-        if (address == "") {
-            document.getElementById('address1').className = 'form-control invalid-field';
-            validation = false;
+
+        //retrieves the required field elements
+        for (idx = 0; idx < requiredFields.length; ++idx) {
+            var requiredField = form.elements[requiredFields[idx]];
+            formValid &= validateRequiredField(requiredField);
         }
-        else {
-            document.getElementById('address1').className = 'form-control';
-        }
-        if (city == "") {
-            document.getElementById('city').className = 'form-control invalid-field';
-            validation = false;
-        }
-        else {
-            document.getElementById('city').className = 'form-control';
-        }
-        if (state == "") {
-            form.elements['state'].className = 'form-control invalid-field';
-            validation = false;
-        }
-        else {
-            form.elements['state'].className = 'form-control';
-        }
-        if (zip == "") {
-            form.elements['zip'].className = 'form-control invalid-field';
-            validation = false;
-        }
-        else if(zip != "") {
-            //uses the regexp object to test the zip field's value against this 
-            //expression
-            if (!zipRegExp.test(zip)) {
-                form.elements['zip'].className = 'form-control invalid-field';
-                validation = false;
+        return formValid;
+    }
+
+    function validateRequiredField(field) {
+        var value = field.value.trim();
+        var valid;
+
+        //conditions for my zip code element
+        if (field.name == 'zip') {
+            var zipRegExp = new RegExp('^\\d{5}$');
+            valid = zipRegExp.test(value);
+            if (value.length > 0 && !valid) {
+                window.alert('Zip code must be 5 digits');
             }
+        }
+        //return the value of birthday difference
+        else if (field.name == 'birthdate') {
+            valid = testDate(value);
+        }
+        else {
+            valid = value.length > 0;
+        }
+        field.className = valid ? 'form-control' : 'form-control invalid-field';
+        return valid;
+    }
+    //tests if the user is older than 13 years old
+    function testDate(dob) {
+        var birthdateMessage = document.getElementById('birthdateMessage');
+        if (dob.length > 0) {
+            var valid = moment().diff(dob, 'years') >= 13;
+            //user is not as old as 13 years old
+            if (!valid) {
+                birthdateMessage.innerHTML = 'You must be 13 years old to sign up';
+                birthdateMessage.style.display = 'inline';
+            }
+            //user is 13 years old or older
             else {
-                form.elements['zip'].className = 'form-control';
+                birthdateMessage.style.display = 'none';
             }
-        } 
-        if(occupationSelect.value == "other" && occupationOther.value == "") {
-            occupationOther.className = 'form-control invalid-field';
-            validation = false;
+            return valid;
         }
-        else {
-            occupationOther.className = 'form-control';
-        }
-        if(birthday == "") {
-            document.getElementById('birthdate').className = 'form-control invalid-field';
-            validation = false;
-        }
-        else if(birthday != "") {
-            //creates the condition for my birthdate year:
-            //the user has to be 13 years old or older otherwise the form will
-            //not allow him to fully submit the user's information
-            var yearsDiff = today.getFullYear() - date.getUTCFullYear();
-            var monthsDiff = today.getMonth() - date.getUTCMonth();
-            var daysDiff = today.getDate() - date.getUTCDate();
-            if (((yearsDiff < 13) || (yearsDiff == 13 && monthsDiff < 0)) || 
-                ((yearsDiff == 13 && monthsDiff == 0) && (daysDiff < 0))) 
-            {
-                var message = document.getElementById('birthdateMessage');
-                //displays message
-                message.innerHTML = "You have to be at least 13 years old. Patience is a virtue!";
-                document.getElementById('birthdate').className = 'form-control invalid-field';
-                validation = false;
-            }
-            else {
-                //retrieve user input for birthday
-                var message = document.getElementById('birthdateMessage');
-                message.innerHTML = "";
-                document.getElementById('birthdate').className = 'form-control';
-            }
-        }
-        return validation;
+        birthdateMessage.style.display = 'none';
+        return false;
     }
 }
